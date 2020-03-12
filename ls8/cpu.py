@@ -69,8 +69,8 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
-        self.running = True
 
+        self.running = True
         while self.running:
             # It needs to read the memory address that's stored in register `PC`
             # store that result in `IR`
@@ -93,19 +93,23 @@ class CPU:
                 self.pc += 1
 
 
-
     def halt(self):
         """Halt CPU (exit emulator)."""
+
         print("Halt program. Exit emulator.")
         exit()
 
 
     def ldi(self, address, value):
+        """Set the value of a register to an inter"""
+
         self.reg[address] = value
         print(f"Set {value} to R{address}")
         self.pc += 3
 
 
     def prn(self, address):
+        """Print numeric value stored in the given register"""
+
         print(f"{self.reg[address]} in R{address}")
         self.pc += 2

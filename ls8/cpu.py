@@ -7,24 +7,30 @@ class CPU:
 
     def __init__(self):
         """Construct a new CPU."""
-        pass
+        
+        # Memory (RAM)
+        self.ram = [0] * 32
+        # Registers
+        self.reg = [0] * 8
+        # Program Counter
+        self.pc = 0
+        # Stack pointer
+        self.sp = self.reg[7]
+        # CPU status
+        self.running = False
 
-    def load(self):
+    def ram_read(self, mar):
+        return self.ram[mar]
+
+    def ram_write(self, mdr, mar):
+        self.ram[mar] = mdr
+        return self.ram[mar]
+
+    def load(self, program):
         """Load a program into memory."""
 
         address = 0
-
-        # For now, we've just hardcoded a program:
-
-        program = [
-            # From print8.ls8
-            0b10000010, # LDI R0,8
-            0b00000000,
-            0b00001000,
-            0b01000111, # PRN R0
-            0b00000000,
-            0b00000001, # HLT
-        ]
+        print(f"load program into memory: {program}")
 
         for instruction in program:
             self.ram[address] = instruction
@@ -60,6 +66,46 @@ class CPU:
 
         print()
 
+
     def run(self):
         """Run the CPU."""
-        pass
+        self.running = True
+
+        while self.running:
+            # It needs to read the memory address that's stored in register `PC`
+            # store that result in `IR`
+            ir = self.ram[self.pc]
+            opcode = ir
+
+            if opcode == 1:
+                self.halt()
+
+            elif opcode == 130:
+                operand_a = self.ram_read(self.pc + 1)
+                operand_b = self.ram_read(self.pc + 2)
+                self.ldi(operand_a, operand_b)
+
+            elif opcode == 71:
+                operand_a = self.ram_read(self.pc + 1)
+                self.prn(operand_a)
+
+            else:
+                self.pc += 1
+
+
+
+    def halt(self):
+        """Halt CPU (exit emulator)."""
+        print("Halt program. Exit emulator.")
+        exit()
+
+
+    def ldi(self, address, value):
+        self.reg[address] = value
+        print(f"Set {value} to R{address}")
+        self.pc += 3
+
+
+    def prn(self, address):
+        print(f"{self.reg[address]} in R{address}")
+        self.pc += 2

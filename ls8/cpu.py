@@ -9,7 +9,7 @@ class CPU:
         """Construct a new CPU."""
         
         # Memory (RAM)
-        self.ram = [0] * 32
+        self.ram = [0] * 256
         # Registers
         self.reg = [0] * 8
         # Program Counter
@@ -97,7 +97,8 @@ class CPU:
         """Halt CPU (exit emulator)."""
 
         print("Halt program. Exit emulator.")
-        exit()
+        self.running = False
+        sys.exit(1)
 
 
     def ldi(self, address, value):

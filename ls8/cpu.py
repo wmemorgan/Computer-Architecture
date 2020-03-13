@@ -98,7 +98,7 @@ class CPU:
 
         print("Halt program. Exit emulator.")
         self.running = False
-        sys.exit(1)
+        sys.exit()
 
 
     def ldi(self, address, value):

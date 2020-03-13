@@ -2,14 +2,16 @@
 
 import sys
 
+
 class CPU:
     """Main CPU class."""
 
     def __init__(self):
         """Construct a new CPU."""
-        
+
         # Memory (RAM)
         self.ram = [0] * 256
+        #self.ram = [0] * 6
         # Registers
         self.reg = [0] * 8
         # Program Counter
@@ -36,13 +38,16 @@ class CPU:
             self.ram[address] = instruction
             address += 1
 
-
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
 
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
-        #elif op == "SUB": etc
+
+        elif op == "MUL":
+            print(f"Multiply {self.reg[reg_a]} by {self.reg[reg_b]}")
+            self.reg[reg_a] = self.reg[reg_a] * self.reg[reg_b]
+        # elif op == "SUB": etc
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -54,8 +59,8 @@ class CPU:
 
         print(f"TRACE: %02X | %02X %02X %02X |" % (
             self.pc,
-            #self.fl,
-            #self.ie,
+            # self.fl,
+            # self.ie,
             self.ram_read(self.pc),
             self.ram_read(self.pc + 1),
             self.ram_read(self.pc + 2)
@@ -66,37 +71,6 @@ class CPU:
 
         print()
 
-
-    def run(self):
-        """Run the CPU."""
-
-        self.running = True
-        while self.running:
-            # It needs to read the memory address that's stored in register `PC`
-            # store that result in `IR`
-            ir = self.ram[self.pc]
-            opcode = ir
-
-            if opcode == 1:
-                self.halt()
-
-            elif opcode == 130:
-                operand_a = self.ram_read(self.pc + 1)
-                operand_b = self.ram_read(self.pc + 2)
-                self.ldi(operand_a, operand_b)
-
-            elif opcode == 71:
-                operand_a = self.ram_read(self.pc + 1)
-                self.prn(operand_a)
-
-            elif opcode == 162:
-                operand_a = self.ram_read(self.pc + 1)
-                operand_b = self.ram_read(self.pc + 2)
-                self.mul(operand_a, operand_b)
-            else:
-                self.pc += 1
-
-
     def halt(self):
         """Halt CPU (exit emulator)."""
 
@@ -104,24 +78,58 @@ class CPU:
         self.running = False
         sys.exit()
 
-
-    def ldi(self, address, value):
+    def ldi(self, address, value, nbr_of_args):
         """Set the value of a register to an inter"""
 
+        self.pc += 1
         self.reg[address] = value
         print(f"Set {value} to R{address}")
-        self.pc += 3
+        self.pc += nbr_of_args
 
-
-    def prn(self, address):
+    def prn(self, address, nbr_of_args):
         """Print numeric value stored in the given register"""
 
+        self.pc += 1
         print(f"{self.reg[address]} in R{address}")
-        self.pc += 2
+        self.pc += nbr_of_args
 
-    def mul(self, address_a, address_b):
-        """Multiply the values in two registers together and store the result in registerA."""
-        
-        print(f"Multiply {self.reg[address_a]} by {self.reg[address_b]}")
-        self.reg[address_a] = self.reg[address_a] * self.reg[address_b]
-        self.pc += 3
+    def run(self):
+        """Run the CPU."""
+
+        self.running = True
+        while self.running:
+            if self.ram[self.pc].find('#') != -1:
+                ir = self.ram[self.pc].split('#')
+                # Extract and parse machine code
+                opcode = ir[0]
+                op = ir[1][1:4]
+
+                # Define arguments
+                nbr_of_args = int(opcode[:2], 2)
+                if nbr_of_args == 1:
+                    operand_a = int(self.ram_read(self.pc + 1), 2)
+
+                elif nbr_of_args == 2:
+                    operand_a = int(self.ram_read(self.pc + 1), 2)
+                    operand_b = int(self.ram_read(self.pc + 2), 2)
+
+                # Check if arithmetic function
+                is_alu = bool(int(opcode[2:3]))
+                if is_alu:
+                    self.alu(op, operand_a, operand_b)
+                    self.pc += nbr_of_args + 1
+
+                elif op == 'HLT':
+                    self.halt()
+
+                elif op == 'LDI':
+                    self.ldi(operand_a, operand_b, nbr_of_args)
+
+                elif op == 'PRN':
+                    self.prn(operand_a, nbr_of_args)
+
+                else:
+                    self.pc += 1
+            else:
+                print(f"No machine instructions")
+                self.halt()

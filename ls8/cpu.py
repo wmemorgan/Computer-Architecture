@@ -105,7 +105,7 @@ class CPU:
                 op = ir[1][1:4]
 
                 # Define arguments
-                nbr_of_args = int(opcode[:2], 2)
+                nbr_of_args = int(opcode, 2) >> 6
                 if nbr_of_args == 1:
                     operand_a = int(self.ram_read(self.pc + 1), 2)
 

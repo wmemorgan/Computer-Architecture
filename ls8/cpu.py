@@ -106,11 +106,10 @@ class CPU:
 
                 # Define arguments
                 nbr_of_args = int(opcode, 2) >> 6
-                if nbr_of_args == 1:
+                if nbr_of_args > 0:
                     operand_a = int(self.ram_read(self.pc + 1), 2)
 
-                elif nbr_of_args == 2:
-                    operand_a = int(self.ram_read(self.pc + 1), 2)
+                if nbr_of_args == 2:
                     operand_b = int(self.ram_read(self.pc + 2), 2)
 
                 # Check if arithmetic function

@@ -22,7 +22,7 @@ class CPU:
         self.running = False
         # Branch table
         self.branchtable = {}
-        self.branchtable['HALT'] = self.halt
+        self.branchtable['HLT'] = self.halt
         self.branchtable['LDI'] = self.ldi
         self.branchtable['PRN'] = self.prn
 
@@ -111,29 +111,33 @@ class CPU:
 
                 # Define arguments
                 nbr_of_args = int(opcode, 2) >> 6
-                if nbr_of_args > 0:
-                    operand_a = int(self.ram_read(self.pc + 1), 2)
+                # operand_a = int(self.ram_read(self.pc + 1), 2)
 
-                if nbr_of_args == 2:
+                if nbr_of_args == 0:
+                    self.branchtable[op]()
+
+                elif nbr_of_args == 1:
+                    operand_a = int(self.ram_read(self.pc + 1), 2)
+                    self.branchtable[op](operand_a, nbr_of_args)
+
+                elif nbr_of_args == 2:
+                    operand_a = int(self.ram_read(self.pc + 1), 2)
                     operand_b = int(self.ram_read(self.pc + 2), 2)
 
-                # Check if arithmetic function
-                is_alu = bool(int(opcode[2:3]))
-                if is_alu:
-                    self.alu(op, operand_a, operand_b)
-                    self.pc += nbr_of_args + 1
+                    # Check if arithmetic function
+                    is_alu = bool(int(opcode[2:3]))
+                    if is_alu:
+                        self.pc += 1
+                        self.alu(op, operand_a, operand_b)
+                        self.pc += nbr_of_args
 
-                elif op == 'HLT':
-                    self.halt()
-
-                elif op == 'LDI':
-                    self.ldi(operand_a, operand_b, nbr_of_args)
-
-                elif op == 'PRN':
-                    self.prn(operand_a, nbr_of_args)
+                    else:
+                        self.branchtable[op](operand_a, operand_b, nbr_of_args)
 
                 else:
+                    # Increment program counter
                     self.pc += 1
+
             else:
                 print(f"No machine instructions")
                 self.halt()

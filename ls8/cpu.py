@@ -11,13 +11,12 @@ class CPU:
 
         # Memory (RAM)
         self.ram = [0] * 256
-        #self.ram = [0] * 6
         # Registers
         self.reg = [0] * 8
         # Program Counter
         self.pc = 0
         # Stack pointer
-        self.sp = self.reg[7]
+        self.reg[7] = self.sp = 244
         # CPU status
         self.running = False
         # Branch table
@@ -25,6 +24,8 @@ class CPU:
         self.branchtable['HLT'] = self.halt
         self.branchtable['LDI'] = self.ldi
         self.branchtable['PRN'] = self.prn
+        self.branchtable['PUS'] = self.push
+        self.branchtable['POP'] = self.pop
 
     def ram_read(self, mar):
         return self.ram[mar]
@@ -98,6 +99,23 @@ class CPU:
         print(f"{self.reg[address]} in R{address}")
         self.pc += nbr_of_args
 
+    def push(self, address, nbr_of_args):
+        print(f"PUSH self.reg[self.sp] BEFORE {self.sp}")
+        self.sp -= 1
+        print(f"PUSH self.reg[self.sp] AFTER {self.sp}")
+        value = self.reg[address]
+        self.ram[self.sp] = value
+        self.pc += nbr_of_args + 1
+
+    def pop(self, address, nbr_of_args):
+        value = self.ram[self.sp]
+        self.reg[address] = value
+        print(f"POP self.reg[self.sp] BEFORE {self.sp}")
+        self.sp += 1
+        print(f"POP self.reg[self.sp] AFTER {self.sp}")
+        self.pc += nbr_of_args + 1
+
+
     def run(self):
         """Run the CPU."""
 
@@ -111,7 +129,6 @@ class CPU:
 
                 # Define arguments
                 nbr_of_args = int(opcode, 2) >> 6
-                # operand_a = int(self.ram_read(self.pc + 1), 2)
 
                 if nbr_of_args == 0:
                     self.branchtable[op]()

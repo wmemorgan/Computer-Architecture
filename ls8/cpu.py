@@ -20,6 +20,11 @@ class CPU:
         self.sp = self.reg[7]
         # CPU status
         self.running = False
+        # Branch table
+        self.branchtable = {}
+        self.branchtable['HALT'] = self.halt
+        self.branchtable['LDI'] = self.ldi
+        self.branchtable['PRN'] = self.prn
 
     def ram_read(self, mar):
         return self.ram[mar]

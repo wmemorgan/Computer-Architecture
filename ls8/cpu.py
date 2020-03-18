@@ -16,7 +16,7 @@ class CPU:
         # Program Counter
         self.pc = 0
         # Stack pointer
-        self.reg[7] = self.sp = 244
+        self.reg[7] = 0xF4
         # CPU status
         self.running = False
         # Branch table
@@ -85,7 +85,7 @@ class CPU:
         sys.exit()
 
     def ldi(self, address, value, nbr_of_args):
-        """Set the value of a register to an inter"""
+        """Set the value of a register to an interger"""
 
         self.pc += 1
         self.reg[address] = value
@@ -100,19 +100,23 @@ class CPU:
         self.pc += nbr_of_args
 
     def push(self, address, nbr_of_args):
-        print(f"PUSH self.reg[self.sp] BEFORE {self.sp}")
-        self.sp -= 1
-        print(f"PUSH self.reg[self.sp] AFTER {self.sp}")
+        # Decrement the stack pointer
+        self.reg[7] -= 1
+        # Copy the value from the given register
         value = self.reg[address]
-        self.ram[self.sp] = value
+        # Save the register value to the top of the stack
+        self.ram[self.reg[7]] = value
+        # Increment program counter
         self.pc += nbr_of_args + 1
 
     def pop(self, address, nbr_of_args):
-        value = self.ram[self.sp]
+        # Copy the value from the address pointed to by the
+        # stack pointer to the given register
+        value = self.ram[self.reg[7]]
         self.reg[address] = value
-        print(f"POP self.reg[self.sp] BEFORE {self.sp}")
-        self.sp += 1
-        print(f"POP self.reg[self.sp] AFTER {self.sp}")
+        # Increment the stack pointer
+        self.reg[7] += 1
+        # Increment program counter
         self.pc += nbr_of_args + 1
 
 
@@ -130,6 +134,7 @@ class CPU:
                 # Define arguments
                 nbr_of_args = int(opcode, 2) >> 6
 
+                # Invoke function from branch table based on number of arguments
                 if nbr_of_args == 0:
                     self.branchtable[op]()
 
@@ -142,7 +147,7 @@ class CPU:
                     operand_b = int(self.ram_read(self.pc + 2), 2)
 
                     # Check if arithmetic function
-                    is_alu = bool(int(opcode[2:3]))
+                    is_alu = bool(int(opcode) >> 5 & 0b00000001)
                     if is_alu:
                         self.pc += 1
                         self.alu(op, operand_a, operand_b)

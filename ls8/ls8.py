@@ -3,29 +3,27 @@
 """Main."""
 
 import sys
-from util import lines_to_program
+from util import load_to_memory
 from cpu import *
 
 cpu = CPU()
-# Confirm input file exists
-if len(sys.argv) <= 1:
-    print("Missing input file.")
-    cpu.halt()
-
-# Read file
-f = open(sys.argv[1], "r")
-lines = f.readlines()
-f.close()
+# Confirm program file is specified
+if len(sys.argv) < 2:
+    print("Missing LS8 program file")
+    sys.exit(2)
+elif len(sys.argv) > 2:
+    print("Invalid command line format")
+    sys.exit(2)
 
 # Import commands into a program
-program = lines_to_program(lines)
+program = load_to_memory(sys.argv[1])
 
 # Validate program and invoke emulator
-if program is not None or len(program) > 0:
+if len(program) > 0:
     cpu.load(program)
     cpu.run()
 
 else:
-    print("Invalid program")
-    cpu.halt()
+    print("Invalid program loaded")
+    sys.exit(1)
             

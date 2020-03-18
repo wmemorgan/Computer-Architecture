@@ -89,6 +89,10 @@ class CPU:
                 operand_a = self.ram_read(self.pc + 1)
                 self.prn(operand_a)
 
+            elif opcode == 162:
+                operand_a = self.ram_read(self.pc + 1)
+                operand_b = self.ram_read(self.pc + 2)
+                self.mul(operand_a, operand_b)
             else:
                 self.pc += 1
 
@@ -114,3 +118,10 @@ class CPU:
 
         print(f"{self.reg[address]} in R{address}")
         self.pc += 2
+
+    def mul(self, address_a, address_b):
+        """Multiply the values in two registers together and store the result in registerA."""
+        
+        print(f"Multiply {self.reg[address_a]} by {self.reg[address_b]}")
+        self.reg[address_a] = self.reg[address_a] * self.reg[address_b]
+        self.pc += 3

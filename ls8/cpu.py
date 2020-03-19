@@ -26,6 +26,8 @@ class CPU:
         self.branchtable['PRN'] = self.prn
         self.branchtable['PUS'] = self.push
         self.branchtable['POP'] = self.pop
+        self.branchtable['CAL'] = self.call
+        self.branchtable['RET'] = self.ret
 
     def ram_read(self, mar):
         return self.ram[mar]
@@ -63,17 +65,20 @@ class CPU:
         from run() if you need help debugging.
         """
 
-        print(f"TRACE: %02X | %02X %02X %02X |" % (
-            self.pc,
-            # self.fl,
-            # self.ie,
-            self.ram_read(self.pc),
-            self.ram_read(self.pc + 1),
-            self.ram_read(self.pc + 2)
-        ), end='')
+        # print(f"TRACE: %02X | %02X %02X %02X |" % (
+        #     self.pc,
+        #     # self.fl,
+        #     # self.ie,
+        #     self.ram_read(self.pc),
+        #     self.ram_read(self.pc + 1),
+        #     self.ram_read(self.pc + 2)
+        # ), end='')
+        print(
+            f"TRACE: {self.pc} | {self.ram_read(self.pc)} {self.ram_read(self.pc + 1)} {self.ram_read(self.pc + 2)} |")
 
         for i in range(8):
-            print(" %02X" % self.reg[i], end='')
+            # print(" %02X" % self.reg[i], end='')
+            print(f"R[{i}] is {self.reg[i]}")
 
         print()
 
@@ -119,12 +124,27 @@ class CPU:
         # Increment program counter
         self.pc += nbr_of_args + 1
 
+    def call(self, address, nbr_of_args):
+        self.pc += 1
+        # Decrement the stack pointer
+        self.reg[7] -= 1
+        # Save the next instruction address to the top of the stack
+        self.ram[self.reg[7]] = self.pc + nbr_of_args
+        # Set the pc to the address stored in the given register
+        self.pc = self.reg[address]
+
+    def ret(self):
+        # Pop the value from the top of the stack and store it in PC
+        self.pc = self.ram[self.reg[7]]
+        # Increment stack pointer
+        self.reg[7] += 1
 
     def run(self):
         """Run the CPU."""
 
         self.running = True
         while self.running:
+            # self.trace()
             if self.ram[self.pc].find('#') != -1:
                 ir = self.ram[self.pc].split('#')
                 # Extract and parse machine code

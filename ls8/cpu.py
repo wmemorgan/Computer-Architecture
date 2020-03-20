@@ -40,7 +40,6 @@ class CPU:
         """Load a program into memory."""
 
         address = 0
-        print(f"load program into memory: {program}")
 
         for instruction in program:
             self.ram[address] = instruction
@@ -144,7 +143,6 @@ class CPU:
 
         self.running = True
         while self.running:
-            # self.trace()
             if self.ram[self.pc].find('#') != -1:
                 ir = self.ram[self.pc].split('#')
                 # Extract and parse machine code

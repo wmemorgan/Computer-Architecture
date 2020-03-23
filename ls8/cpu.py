@@ -16,11 +16,11 @@ class CPU:
         # Program Counter
         self.pc = 0
         # Stack pointer
-        self.reg[7] = 0xF4
+        self.reg[7] = 244
         # CPU status
         self.running = False
         # Flags register
-        self.fl = 0b00000000
+        self.fl = 0
         # Branch table
         self.branchtable = {}
         self.branchtable['HLT'] = self.halt
@@ -69,15 +69,12 @@ class CPU:
 
             # If equal set FL register E flag to 1
             if self.reg[reg_a] == self.reg[reg_b]:
-                print(f"EQUAL")
                 self.toggle_flag(0)
             # If reg_a is greater than reg_b set FL register G flag to 1
             elif self.reg[reg_a] > self.reg[reg_b]:
-                print("GREATER THAN")
                 self.toggle_flag(1)
             # If reg_a is less than reg_b set FL register L flag to 1
             else:
-                print("LESS THAN")
                 self.toggle_flag(2)
 
         else:
@@ -197,12 +194,12 @@ class CPU:
     def reset_flag(self):
         """Reset flag register"""
 
-        self.fl = 0b00000000
+        self.fl = 0
 
-    def toggle_flag(self, fl):
+    def toggle_flag(self, bit):
         """Toggle nth bit in flag register"""
 
-        self.fl = self.fl ^ (1 << fl)
+        self.fl = self.fl ^ (1 << bit)
 
     def run(self):
         """Run the CPU."""
@@ -231,9 +228,7 @@ class CPU:
                     operand_b = int(self.ram_read(self.pc + 2), 2)
 
                     # Check if arithmetic function
-                    #is_alu = bool(int(opcode) >> 5 & 0b00000001)
-                    #print(f"IS {op} an ALU: {is_alu}")
-                    is_alu = bool(int(opcode[2:3]))
+                    is_alu = bool(int(opcode, 2) >> 5 & 0b00000001)
                     if is_alu:
                         self.pc += 1
                         self.alu(op, operand_a, operand_b)

@@ -2,6 +2,19 @@
 
 import sys
 
+# Instruction codes
+HLT = 1
+LDI = 2
+PRN = 7
+PUS = 5
+POP = 6
+
+# Program Jump codes
+CAL = 0
+RET = 1
+JMP = 4
+JEQ = 5
+JNE = 6
 
 class CPU:
     """Main CPU class."""
@@ -21,18 +34,21 @@ class CPU:
         self.running = False
         # Flags register
         self.fl = 0
-        # Branch table
+        # Branch table to handle instruction codes
         self.branchtable = {}
-        self.branchtable['HLT'] = self.halt
-        self.branchtable['LDI'] = self.ldi
-        self.branchtable['PRN'] = self.prn
-        self.branchtable['PUS'] = self.push
-        self.branchtable['POP'] = self.pop
-        self.branchtable['CAL'] = self.call
-        self.branchtable['RET'] = self.ret
-        self.branchtable['JMP'] = self.jmp
-        self.branchtable['JEQ'] = self.jeq
-        self.branchtable['JNE'] = self.jne
+        self.branchtable[HLT] = self.halt
+        self.branchtable[LDI] = self.ldi
+        self.branchtable[PRN] = self.prn
+        self.branchtable[PUS] = self.push
+        self.branchtable[POP] = self.pop
+        
+        # Jump table that sets program counter
+        self.jumptable = {}
+        self.jumptable[CAL] = self.call
+        self.jumptable[RET] = self.ret
+        self.jumptable[JMP] = self.jmp
+        self.jumptable[JEQ] = self.jeq
+        self.jumptable[JNE] = self.jne
 
     def ram_read(self, mar):
         return self.ram[mar]
@@ -44,6 +60,8 @@ class CPU:
     def load(self, program):
         """Load a program into memory."""
 
+        print(f"Program in memory {program}")
+
         address = 0
 
         for instruction in program:
@@ -52,16 +70,20 @@ class CPU:
 
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
+        ADD = 0
+        MUL = 2
+        CMP = 7
 
-        if op == "ADD":
+        if op == ADD:
+            print(f"Add {self.reg[reg_a]} and {self.reg[reg_b]}")
             self.reg[reg_a] += self.reg[reg_b]
 
-        elif op == "MUL":
+        elif op == MUL:
             print(f"Multiply {self.reg[reg_a]} by {self.reg[reg_b]}")
             self.reg[reg_a] = self.reg[reg_a] * self.reg[reg_b]
         # elif op == "SUB": etc
 
-        elif op == 'CMP':
+        elif op == CMP:
             """Compare the values in two registers"""
 
             # Reset register flags
@@ -206,41 +228,55 @@ class CPU:
 
         self.running = True
         while self.running:
-            if self.ram[self.pc].find('#') != -1:
-                ir = self.ram[self.pc].split('#')
-                # Extract and parse machine code
-                opcode = ir[0]
-                op = ir[1][1:4]
+            # Instruction Register
+            ir = self.ram[self.pc]
+            
+            # Define arguments
+            nbr_of_args = ir >> 6
 
-                # Define arguments
-                nbr_of_args = int(opcode, 2) >> 6
+            # ALU flag
+            is_alu = bool(ir >> 5 & 0b00000001)
 
-                # Invoke function from branch table based on number of arguments
+            # PC setting instruction flag
+            set_pc = bool(ir >> 4 & 0b00000001)
+
+            # Instruction identifier
+            op = ir & 0b00001111
+
+            # CPU state check
+            # print(f"number of arguments: {nbr_of_args}")
+            # print(f"ALU function: {is_alu}")
+            # print(f"set pc instruction: {set_pc}")
+            # print(f"instruction code: {op}")
+
+            # Determine proper dispatch table
+            dispatch_table = self.jumptable if set_pc else self.branchtable
+
+            try:
+                # Invoke function based on number of arguments
                 if nbr_of_args == 0:
-                    self.branchtable[op]()
+                    dispatch_table[op]()
 
                 elif nbr_of_args == 1:
-                    operand_a = int(self.ram_read(self.pc + 1), 2)
-                    self.branchtable[op](operand_a, nbr_of_args)
+                    operand_a = self.ram_read(self.pc + 1)
+                    dispatch_table[op](operand_a, nbr_of_args)
 
                 elif nbr_of_args == 2:
-                    operand_a = int(self.ram_read(self.pc + 1), 2)
-                    operand_b = int(self.ram_read(self.pc + 2), 2)
+                    operand_a = self.ram_read(self.pc + 1)
+                    operand_b = self.ram_read(self.pc + 2)
 
                     # Check if arithmetic function
-                    is_alu = bool(int(opcode, 2) >> 5 & 0b00000001)
                     if is_alu:
                         self.pc += 1
                         self.alu(op, operand_a, operand_b)
                         self.pc += nbr_of_args
 
                     else:
-                        self.branchtable[op](operand_a, operand_b, nbr_of_args)
+                        dispatch_table[op](operand_a, operand_b, nbr_of_args)
 
                 else:
-                    # Increment program counter
-                    self.pc += 1
+                    raise KeyError
 
-            else:
-                print(f"No machine instructions")
-                self.halt()
+            except KeyError:
+                print(f"ERROR: No machine instructions")
+                sys.exit(1)

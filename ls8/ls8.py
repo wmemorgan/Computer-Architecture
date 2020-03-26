@@ -9,10 +9,10 @@ from cpu import *
 cpu = CPU()
 # Confirm program file is specified
 if len(sys.argv) < 2:
-    print("Missing LS8 program file")
+    print("ERROR: Missing LS8 program file")
     sys.exit(2)
 elif len(sys.argv) > 2:
-    print("Invalid command line format")
+    print("ERROR: Invalid command line format")
     sys.exit(2)
 
 # Import commands into a program
@@ -24,6 +24,6 @@ if len(program) > 0:
     cpu.run()
 
 else:
-    print("Invalid program loaded")
+    print("ERROR: Invalid program loaded")
     sys.exit(1)
             

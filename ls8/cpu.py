@@ -16,9 +16,11 @@ class CPU:
         # Program Counter
         self.pc = 0
         # Stack pointer
-        self.reg[7] = 0xF4
+        self.reg[7] = 244
         # CPU status
         self.running = False
+        # Flags register
+        self.fl = 0
         # Branch table
         self.branchtable = {}
         self.branchtable['HLT'] = self.halt
@@ -28,6 +30,9 @@ class CPU:
         self.branchtable['POP'] = self.pop
         self.branchtable['CAL'] = self.call
         self.branchtable['RET'] = self.ret
+        self.branchtable['JMP'] = self.jmp
+        self.branchtable['JEQ'] = self.jeq
+        self.branchtable['JNE'] = self.jne
 
     def ram_read(self, mar):
         return self.ram[mar]
@@ -55,6 +60,23 @@ class CPU:
             print(f"Multiply {self.reg[reg_a]} by {self.reg[reg_b]}")
             self.reg[reg_a] = self.reg[reg_a] * self.reg[reg_b]
         # elif op == "SUB": etc
+
+        elif op == 'CMP':
+            """Compare the values in two registers"""
+
+            # Reset register flags
+            self.reset_flag()
+
+            # If equal set FL register E flag to 1
+            if self.reg[reg_a] == self.reg[reg_b]:
+                self.toggle_flag(0)
+            # If reg_a is greater than reg_b set FL register G flag to 1
+            elif self.reg[reg_a] > self.reg[reg_b]:
+                self.toggle_flag(1)
+            # If reg_a is less than reg_b set FL register L flag to 1
+            else:
+                self.toggle_flag(2)
+
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -93,7 +115,7 @@ class CPU:
 
         self.pc += 1
         self.reg[address] = value
-        print(f"Set {value} to R{address}")
+        #print(f"Set {value} to R{address}")
         self.pc += nbr_of_args
 
     def prn(self, address, nbr_of_args):
@@ -124,6 +146,8 @@ class CPU:
         self.pc += nbr_of_args + 1
 
     def call(self, address, nbr_of_args):
+        """Calls a subroutine (function) at the address stored in the register"""
+
         self.pc += 1
         # Decrement the stack pointer
         self.reg[7] -= 1
@@ -133,10 +157,49 @@ class CPU:
         self.pc = self.reg[address]
 
     def ret(self):
+        """Return from subroutine"""
+
         # Pop the value from the top of the stack and store it in PC
         self.pc = self.ram[self.reg[7]]
         # Increment stack pointer
         self.reg[7] += 1
+
+    def jmp(self, address, nbr_of_args):
+        """
+        JMP register
+        Jump to the address stored in the given register
+        """
+
+        # Set the PC to the address stored in the given register.
+        self.pc = self.reg[address]
+
+    def jeq(self, address, nbr_of_args):
+        """JEQ register"""
+
+        if self.fl == 1:
+            self.jmp(address, nbr_of_args)
+        else:
+            print(f"Flag is NOT EQUAL can't execute JEQ function")
+            self.pc += 1 + nbr_of_args
+
+    def jne(self, address, nbr_of_args):
+        """JNE register"""
+
+        if self.fl != 1:
+            self.jmp(address, nbr_of_args)
+        else:
+            print(f"Flag is EQUAL can't execute JNE function")
+            self.pc += 1 + nbr_of_args
+
+    def reset_flag(self):
+        """Reset flag register"""
+
+        self.fl = 0
+
+    def toggle_flag(self, bit):
+        """Toggle nth bit in flag register"""
+
+        self.fl = self.fl ^ (1 << bit)
 
     def run(self):
         """Run the CPU."""
@@ -165,7 +228,7 @@ class CPU:
                     operand_b = int(self.ram_read(self.pc + 2), 2)
 
                     # Check if arithmetic function
-                    is_alu = bool(int(opcode) >> 5 & 0b00000001)
+                    is_alu = bool(int(opcode, 2) >> 5 & 0b00000001)
                     if is_alu:
                         self.pc += 1
                         self.alu(op, operand_a, operand_b)

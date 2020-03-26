@@ -1,6 +1,6 @@
 import sys
 
-# Convert file output to machine code
+# Convert file input to machine code
 def load_to_memory(filename):
     program = []
     try:

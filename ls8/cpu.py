@@ -60,8 +60,7 @@ class CPU:
     def load(self, program):
         """Load a program into memory."""
 
-        print(f"Program in memory {program}")
-
+        #print(f"Program in memory {program}")
         address = 0
 
         for instruction in program:
@@ -108,19 +107,10 @@ class CPU:
         from run() if you need help debugging.
         """
 
-        # print(f"TRACE: %02X | %02X %02X %02X |" % (
-        #     self.pc,
-        #     # self.fl,
-        #     # self.ie,
-        #     self.ram_read(self.pc),
-        #     self.ram_read(self.pc + 1),
-        #     self.ram_read(self.pc + 2)
-        # ), end='')
         print(
             f"TRACE: {self.pc} | {self.ram_read(self.pc)} {self.ram_read(self.pc + 1)} {self.ram_read(self.pc + 2)} |")
 
         for i in range(8):
-            # print(" %02X" % self.reg[i], end='')
             print(f"R[{i}] is {self.reg[i]}")
 
         print()
@@ -137,7 +127,6 @@ class CPU:
 
         self.pc += 1
         self.reg[address] = value
-        #print(f"Set {value} to R{address}")
         self.pc += nbr_of_args
 
     def prn(self, address, nbr_of_args):
@@ -242,12 +231,6 @@ class CPU:
 
             # Instruction identifier
             op = ir & 0b00001111
-
-            # CPU state check
-            # print(f"number of arguments: {nbr_of_args}")
-            # print(f"ALU function: {is_alu}")
-            # print(f"set pc instruction: {set_pc}")
-            # print(f"instruction code: {op}")
 
             # Determine proper dispatch table
             dispatch_table = self.jumptable if set_pc else self.branchtable
